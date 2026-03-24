@@ -1,58 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SIIT AI Matcher</title>
-<style>
-body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
-textarea { width: 100%; height: 150px; margin-bottom: 10px; }
-button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-.result { border-bottom: 1px solid #ccc; padding: 10px 0; }
-.pass { color: green; font-weight: bold; }
-.fail { color: red; font-weight: bold; }
-</style>
+  <base target="_top">
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    textarea { width: 100%; }
+    button { padding: 10px 20px; margin-top: 10px; }
+    .card {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+    .pass { color: green; }
+    .fail { color: red; }
+  </style>
 </head>
 <body>
 
-<h1>🎯 SIIT AI Matcher 003</h1>
-<p>กรอกคำอธิบายรายวิชาที่ต้องการตรวจสอบ:</p>
-<textarea id="courseInput" placeholder="Paste course description here..."></textarea>
-<br>
-<button onclick="checkCourses()">🔍 ตรวจสอบความสอดคล้อง</button>
+<h2>🎯 SIIT AI Matcher</h2>
 
-<h2>ผลลัพธ์</h2>
-<div id="results"></div>
+<textarea id="input" rows="6"
+placeholder="Paste course description here..."></textarea>
+
+<br>
+<button onclick="runMatch()">🔍 Match Courses</button>
+
+<div id="result"></div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiq6UuIaaMQfKGAMC1bgjoRJhBWsUYWRnvTMamjQv9p2Qjp4F6Ux4kz3y8EjipXTpsbQ/exec"; // replace with Apps Script URL
+function runMatch() {
+  const text = document.getElementById("input").value;
 
-async function checkCourses() {
-  const inputText = document.getElementById("courseInput").value.trim();
-  if (!inputText){ alert("กรุณากรอกคำอธิบายรายวิชา"); return; }
+  document.getElementById("result").innerHTML = "⏳ Processing...";
 
-  document.getElementById("results").innerHTML = "<p>⏳ กำลังตรวจสอบ...</p>";
+  google.script.run
+    .withSuccessHandler(showResult)
+    .matchCourses(text);
+}
 
-  try {
-    const url = SCRIPT_URL + "?q=" + encodeURIComponent(inputText);
-    const top5 = await fetch(url).then(res => res.json());
+function showResult(results) {
+  let html = "";
 
-    let html = "";
-    top5.forEach((c, i) => {
-      const status = c.score >= 70 ? "✅ PASS" : "❌ FAIL/REVIEW";
-      const cls = c.score >= 70 ? "pass" : "fail";
-      html += `<div class="result">
-        <p><strong>อันดับ ${i+1}:</strong> <span class="${cls}">${status}</span> (ความเหมือน ${c.score.toFixed(2)}%)</p>
-        <p>📖 SIIT Course: ${c.code} - ${c.name}</p>
-        <p>📝 เนื้อหา SIIT: ${c.description.substring(0,200)}...</p>
-      </div>`;
-    });
+  results.forEach((r, i) => {
+    const cls = r.score >= 70 ? "pass" : "fail";
 
-    document.getElementById("results").innerHTML = html;
+    html += `
+      <div class="card">
+        <b>#${i+1} ${r.status}</b><br>
+        ${r.code} - ${r.name}<br>
+        Similarity: <span class="${cls}">${r.score.toFixed(2)}%</span>
+      </div>
+    `;
+  });
 
-  } catch(e) {
-    document.getElementById("results").innerHTML = `<p style="color:red;">❌ เกิดข้อผิดพลาด: ${e}</p>`;
-  }
+  document.getElementById("result").innerHTML = html;
 }
 </script>
 
