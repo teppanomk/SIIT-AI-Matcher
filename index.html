@@ -15,7 +15,7 @@ button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
 </head>
 <body>
 
-<h1>🎯 ระบบตรวจสอบความสอดคล้องรายวิชา 001 (SIIT AI Matcher)</h1>
+<h1>🎯 ระบบตรวจสอบความสอดคล้องรายวิชา (SIIT AI Matcher)</h1>
 <p>กรอกคำอธิบายรายวิชาที่ต้องการตรวจสอบ:</p>
 <textarea id="courseInput" placeholder="Paste course description here..."></textarea>
 <br>
@@ -29,14 +29,13 @@ button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvWV_Vit-mwc8-YmZpHs2BFGB1QjJXPfpYRX2cb0emMeksmvLAwszJ4ZP6_U4wn5l5/exec";
 
 // ---------------- HELPER FUNCTIONS ----------------
-function cosineSim(a, b) {
-    let dot = 0, normA = 0, normB = 0;
-    for(let i=0;i<a.length;i++){
-        dot += a[i]*b[i];
-        normA += a[i]*a[i];
-        normB += b[i]*b[i];
-    }
-    return dot / (Math.sqrt(normA)*Math.sqrt(normB));
+function simpleMatchScore(input, text) {
+    // Simple scoring: percentage of words in input appearing in course description
+    const inputWords = input.toLowerCase().split(/\W+/);
+    const textWords = text.toLowerCase().split(/\W+/);
+    let count = 0;
+    inputWords.forEach(w => { if(textWords.includes(w)) count++; });
+    return (count / inputWords.length) * 100;
 }
 
 // ---------------- MAIN FUNCTION ----------------
@@ -50,17 +49,13 @@ async function checkCourses() {
     document.getElementById("results").innerHTML = "<p>⏳ กำลังตรวจสอบ...</p>";
 
     try {
-        // Fetch courses JSON from Apps Script
+        // Fetch courses from CORS-enabled Apps Script
         const courses = await fetch(SCRIPT_URL).then(res => res.json());
 
-        // For demo, using the first course embedding as a placeholder
-        // Ideally, Apps Script should also compute embedding for user input
-        const queryEmbedding = courses[0].embedding.map(x => x * 1);
-
-        // Compute similarity for each course
-        let scored = courses.map(c => ({
+        // Compute simple match score for each course
+        const scored = courses.map(c => ({
             ...c,
-            score: cosineSim(queryEmbedding, c.embedding) * 100
+            score: simpleMatchScore(inputText, c.description)
         }));
 
         // Sort top 5
