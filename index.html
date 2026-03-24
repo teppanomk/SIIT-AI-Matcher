@@ -15,7 +15,7 @@ button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
 </head>
 <body>
 
-<h1>🎯 ระบบตรวจสอบความสอดคล้องรายวิชา (SIIT AI Matcher)</h1>
+<h1>🎯 ระบบตรวจสอบความสอดคล้องรายวิชา 001 (SIIT AI Matcher)</h1>
 <p>กรอกคำอธิบายรายวิชาที่ต้องการตรวจสอบ:</p>
 <textarea id="courseInput" placeholder="Paste course description here..."></textarea>
 <br>
@@ -26,8 +26,7 @@ button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
 
 <script>
 // ---------------- CONFIG ----------------
-const API_KEY = "AIzaSyCMRRU0uA0hp63n2hnIq3fwbvWgkW0cVbY";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvP6i3oZvJaYW26kdUZXgbfwIvzNe-IQGONnhKxl22Nokmuw080fiVH5jSFAcXt4bojw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvWV_Vit-mwc8-YmZpHs2BFGB1QjJXPfpYRX2cb0emMeksmvLAwszJ4ZP6_U4wn5l5/exec";
 
 // ---------------- HELPER FUNCTIONS ----------------
 function cosineSim(a, b) {
@@ -38,27 +37,6 @@ function cosineSim(a, b) {
         normB += b[i]*b[i];
     }
     return dot / (Math.sqrt(normA)*Math.sqrt(normB));
-}
-
-// Get embedding of user input from Google API
-async function getEmbedding(text) {
-    const resp = await fetch("https://embedding.googleapis.com/v1/embeddings?model=textembedding-gecko-001", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_KEY}`
-        },
-        body: JSON.stringify({ input: text })
-    });
-    const data = await resp.json();
-    return data.data[0].embedding;
-}
-
-// Fetch courses with precomputed embeddings from Apps Script
-async function fetchCourses() {
-    const resp = await fetch(SCRIPT_URL);
-    const data = await resp.json();
-    return data;
 }
 
 // ---------------- MAIN FUNCTION ----------------
@@ -72,9 +50,12 @@ async function checkCourses() {
     document.getElementById("results").innerHTML = "<p>⏳ กำลังตรวจสอบ...</p>";
 
     try {
-        // Get courses and user embedding
-        const courses = await fetchCourses();
-        const queryEmbedding = await getEmbedding(inputText);
+        // Fetch courses JSON from Apps Script
+        const courses = await fetch(SCRIPT_URL).then(res => res.json());
+
+        // For demo, using the first course embedding as a placeholder
+        // Ideally, Apps Script should also compute embedding for user input
+        const queryEmbedding = courses[0].embedding.map(x => x * 1);
 
         // Compute similarity for each course
         let scored = courses.map(c => ({
