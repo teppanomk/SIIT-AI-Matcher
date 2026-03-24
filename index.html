@@ -15,7 +15,7 @@ button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
 </head>
 <body>
 
-<h1>🎯 ระบบตรวจสอบความสอดคล้องรายวิชา 001 (SIIT AI Matcher)</h1>
+<h1>🎯 SIIT AI Matcher 003</h1>
 <p>กรอกคำอธิบายรายวิชาที่ต้องการตรวจสอบ:</p>
 <textarea id="courseInput" placeholder="Paste course description here..."></textarea>
 <br>
@@ -25,21 +25,17 @@ button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
 <div id="results"></div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6VnKTbaoT7KxUyWNb6PpeYqwlJG2f-eeFA2s7KH_q1LOkkGJ7Zz6IBmyo6M7nLvPSuw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiq6UuIaaMQfKGAMC1bgjoRJhBWsUYWRnvTMamjQv9p2Qjp4F6Ux4kz3y8EjipXTpsbQ/exec"; // replace with Apps Script URL
 
 async function checkCourses() {
   const inputText = document.getElementById("courseInput").value.trim();
-  if (!inputText) { alert("กรุณากรอกคำอธิบายรายวิชา"); return; }
+  if (!inputText){ alert("กรุณากรอกคำอธิบายรายวิชา"); return; }
+
   document.getElementById("results").innerHTML = "<p>⏳ กำลังตรวจสอบ...</p>";
 
   try {
     const url = SCRIPT_URL + "?q=" + encodeURIComponent(inputText);
     const top5 = await fetch(url).then(res => res.json());
-
-    if (top5.error) {
-      document.getElementById("results").innerHTML = `<p style="color:red;">❌ ${top5.error}</p>`;
-      return;
-    }
 
     let html = "";
     top5.forEach((c, i) => {
@@ -53,7 +49,8 @@ async function checkCourses() {
     });
 
     document.getElementById("results").innerHTML = html;
-  } catch (e) {
+
+  } catch(e) {
     document.getElementById("results").innerHTML = `<p style="color:red;">❌ เกิดข้อผิดพลาด: ${e}</p>`;
   }
 }
